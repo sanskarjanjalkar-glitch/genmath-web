@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenMathAI Pro</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --surface: #ffffff; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
+        
+        /* Login Modal */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-box { background: white; padding: 2rem; border-radius: 12px; width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        
+        /* Main UI */
+        .container { max-width: 800px; margin: 0 auto; display: none; } /* Hidden until login */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .card { background: var(--surface); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        textarea, input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 8px; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
+        button.secondary { background: #64748b; }
+        button.clear { background: #ef4444; }
+        
+        #solution-box { margin-top: 20px; padding: 20px; background: #f1f5f9; border-radius: 8px; white-space: pre-wrap; display: none; }
+        
+        /* Monetization Badge */
+        .pro-badge { background: linear-gradient(135deg, #FFD700, #FFA500); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; color: #744210; font-weight: bold; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>🔐 GenMathAI Login</h2>
+            <input type="text" id="username" placeholder="Username (admin)">
+            <input type="password" id="password" placeholder="Password (1234)">
+            <button onclick="login()">Enter Dashboard</button>
+        </div>
+    </div>
+
+    <div class="container" id="dashboard">
+        <div class="header">
+            <h1>GenMathAI <span class="pro-badge">PRO</span></h1>
+            <button class="secondary" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="card">
+            <h3>📝 Input Problem</h3>
+            <textarea id="text-input" rows="4" placeholder="Type your math problem here..."></textarea>
+            
+            <p><strong>OR Upload Image (OCR)</strong></p>
+            <input type="file" id="image-input" accept="image/*">
+            
+            <div style="margin-top: 1rem; display: flex; gap: 10px;">
+                <button onclick="solve()" style="flex: 2;">🚀 Solve Step-by-Step</button>
+                <button class="clear" onclick="clearAll()" style="flex: 1;">❌ Clear</button>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px; border: 2px solid #FFD700;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>🚀 Upgrade to Premium</strong><br>
+                    <small>Get PDF exports & 24/7 Tutor Access</small>
+                </div>
+                <button onclick="alert('Redirecting to Stripe Payment...')" style="background: #eab308;">Buy Pro ($5/mo)</button>
+            </div>
+        </div>
+
+        <div id="solution-box"></div>
+    </div>
+
+    <script>
+        // AUTH LOGIC
+        function login() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            if(u === "admin" && p === "1234") {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                localStorage.setItem('token', 'Bearer admin-token-123');
+            } else {
+                alert("Wrong credentials! Try admin / 1234");
+            }
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        function clearAll() {
+            document.getElementById('text-input').value = '';
+            document.getElementById('image-input').value = '';
+            document.getElementById('solution-box').style.display = 'none';
+        }
+
+        // SOLVER LOGIC
+        async function solve() {
+            const text = document.getElementById('text-input').value;
+            const imageFile = document.getElementById('image-input').files[0];
+            const resultBox = document.getElementById('solution-box');
+            
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = "⏳ AI is thinking... (Scanning & Deriving)";
+
+            const formData = new FormData();
+            formData.append('query', text);
+            if(imageFile) formData.append('image', imageFile);
+
+            try {
+                const response = await fetch('/api/solve', {
+                    method: 'POST',
+                    headers: { 'Authorization': localStorage.getItem('token') },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if(data.error) {
+                    resultBox.innerHTML = "❌ Error: " + data.error;
+                } else {
+                    // Use Marked to render bold text, lists, etc.
+                    resultBox.innerHTML = marked.parse(data.solution);
+                }
+            } catch (err) {
+                resultBox.innerHTML = "❌ Network Error";
+            }
+        }
+    </script>
+</body>
+</html>
