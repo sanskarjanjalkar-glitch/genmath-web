@@ -14,7 +14,7 @@ def configure_gemini():
     if not GEMINI_API_KEY:
         raise ValueError("API Key not found")
     genai.configure(api_key=GEMINI_API_KEY)
-    return genai.GenerativeModel('gemini-1.5-pro')
+    return genai.GenerativeModel('gemini-1.5-flash')
 
 @app.route('/api/solve', methods=['POST'])
 def solve():
@@ -56,4 +56,5 @@ def solve():
 # Vercel requires this for serverless execution
 if __name__ == '__main__':
     app.run()
+
 
