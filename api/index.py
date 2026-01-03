@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # --- CONFIGURATION ---
 # We will set this in Vercel Settings later
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") 
+GEMINI_API_KEY = "AIzaSyBK45Qqo88fydpa-wX0dYX9U6nQ4usGRzM" 
 
 def configure_gemini():
     if not GEMINI_API_KEY:
@@ -56,5 +56,6 @@ def solve():
 # Vercel requires this for serverless execution
 if __name__ == '__main__':
     app.run()
+
 
 
